@@ -57,7 +57,7 @@ playwright install chromium
 
 cp .env.example .env
 # edit .env: add your free GEMINI_API_KEY (get one at https://aistudio.google.com/apikey)
-# and your LinkedIn/Indeed/Naukri credentials
+# — leave the LinkedIn/Indeed/Naukri fields blank, see "Logging in" below
 
 mkdir -p resumes && cp /path/to/your/resume.pdf resumes/resume.pdf
 
@@ -68,6 +68,22 @@ python main.py show-profile
 python main.py apply --dry-run     # fills forms but never submits, for a first test run
 python main.py apply               # the real thing, per your config.yaml
 ```
+
+### Logging in (Google sign-in works fine)
+
+The first time you run `apply`, a real Chromium window opens on each enabled site's login page
+and the terminal prints something like `[linkedin] A browser window is open on the login page.
+Please log in there yourself...` — then just log in normally in that window. If you use "Continue
+with Google" for LinkedIn/Indeed/Naukri, that's exactly what you'd click here too; the agent never
+touches your Google credentials or tries to automate that step. Handle any 2FA or CAPTCHA the same
+way you always would, then switch back to the terminal and hit Enter to let the agent continue.
+
+Each site gets its own persistent browser profile under `data/browser_profile/`, so that session
+gets saved to disk and reused automatically on every future run — you should only need to do this
+manual login once per site, not once per run. (Automating Google/Microsoft's own sign-in page with
+a typed-in password is specifically the pattern their bot detection is built to catch, and getting
+flagged there risks your actual Google account — not just the job site — so this project
+deliberately never attempts it.)
 
 ## Configuration
 
@@ -85,7 +101,7 @@ Key settings worth knowing about in `config.yaml`:
 | `apply.max_applications_per_run` / `max_applications_per_day` | Hard caps so a bug (or an overly broad search) can't fire off hundreds of applications unattended. |
 | `apply.delay_between_applications_seconds` | Randomized pause between applications so behavior looks less like a bot firing on a timer. |
 | `sites.linkedin.easy_apply_only` | Only attempts LinkedIn's in-platform "Easy Apply" flow; postings that redirect to an external company ATS are skipped, since those forms are too varied to fill generically. |
-| `browser.headless` | Keep `false` at first — you'll need a visible browser window to solve any CAPTCHA/2FA challenge that comes up. |
+| `browser.headless` | Keep `false` at first — you'll need a visible browser window for the one-time manual login (see above) and to solve any CAPTCHA/2FA challenge that comes up. |
 
 ## Safety & Terms of Service — read this before using `apply.mode: auto`
 

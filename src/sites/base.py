@@ -32,18 +32,43 @@ class SiteAdapter(ABC):
 
     def __init__(self, page: Page, credentials: dict, site_config: dict):
         self.page = page
-        self.credentials = credentials  # {"email": ..., "password": ...}
+        self.credentials = credentials  # {"email": ..., "password": ...} — optional, see login()
         self.site_config = site_config  # this site's block from config.yaml
+
+    def _pause_for_manual_login(self, hint: str = "") -> None:
+        """Block until the human confirms they've finished logging in, in the
+        real browser window this adapter is driving. Shared by every
+        adapter so the message and behavior are consistent across sites.
+        """
+        extra = f" {hint}" if hint else ""
+        print(
+            f"\n[{self.site_name}] A browser window is open on the login page. Please log in "
+            f"there yourself — Google sign-in, email/password, SSO, whatever you normally "
+            f"use — and complete any 2FA or CAPTCHA it asks for.{extra}\n"
+            f"[{self.site_name}] Once you're logged in, come back to this terminal and press "
+            f"Enter to continue..."
+        )
+        input()
 
     @abstractmethod
     def login(self) -> bool:
-        """Log into the site. Returns True on success.
+        """Get to a logged-in state on this site. Returns True on success.
 
-        Should be resilient to already-being-logged-in (e.g. via a reused
-        persistent browser profile) and should NOT attempt to solve
-        CAPTCHAs or 2FA itself — if one appears, pause and let the human
-        operator handle it (the browser runs headed by default for this
-        reason), then continue.
+        Login is manual-first by design: we navigate to the site, check
+        whether a reused persistent browser profile already has an active
+        session, and if not, pause and ask the human to log in themselves
+        in the visible browser window — with whichever method they
+        actually use (Google/Microsoft SSO, email+password, 2FA, a
+        CAPTCHA, whatever) — then continue once they confirm.
+
+        This is deliberate, not a shortcut: typing a saved password into a
+        Google/Microsoft sign-in page from an automated script is exactly
+        the pattern those providers' bot-detection is built to catch, and
+        getting flagged risks the underlying Google/Microsoft account, not
+        just the job site account. Because each adapter uses a persistent
+        browser profile (see main.py), this manual step is normally only
+        needed once ever per site — every later run reuses the saved
+        session automatically.
         """
         raise NotImplementedError
 

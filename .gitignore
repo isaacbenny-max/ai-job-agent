@@ -21,6 +21,9 @@ cookies/
 ## Runtime data
 data/*.db
 data/*.sqlite3
+# Persistent browser profiles hold live LinkedIn/Indeed/Naukri login
+# sessions (cookies, local storage) — never commit these.
+data/browser_profile/
 logs/
 *.log
 screenshots/

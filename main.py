@@ -168,26 +168,35 @@ def apply(config_path: str, dry_run: bool, only_sites: tuple[str, ...]):
     apply_config["screenshot_on_submit"] = config["tracking"].get("screenshot_on_submit", True)
 
     submitted_count = 0
+    profile_root = os.environ.get("BROWSER_PROFILE_DIR", "./data/browser_profile")
 
     with sync_playwright() as p:
         browser_conf = config.get("browser", {})
-        browser = p.chromium.launch(
-            headless=browser_conf.get("headless", False),
-            slow_mo=browser_conf.get("slow_mo_ms", 0),
-        )
 
         for site in sites_to_run:
             if submitted_count >= remaining_budget:
                 break
 
             console.rule(f"[bold blue]{site.value}")
-            page = browser.new_page()
+
+            # Each site gets its own persistent browser profile (its own
+            # cookies/local-storage on disk), so once you log in manually
+            # the first time — Google sign-in, email/password, whatever —
+            # every later run reuses that session automatically.
+            site_profile_dir = str(Path(profile_root) / site.value)
+            context = p.chromium.launch_persistent_context(
+                site_profile_dir,
+                headless=browser_conf.get("headless", False),
+                slow_mo=browser_conf.get("slow_mo_ms", 0),
+            )
+            page = context.pages[0] if context.pages else context.new_page()
+
             adapter_cls = SITE_ADAPTERS[site]
             adapter = adapter_cls(page, credentials[site], config["sites"][site.value])
 
             if not adapter.login():
                 console.print(f"[red]Login failed for {site.value} — skipping this site.[/red]")
-                page.close()
+                context.close()
                 continue
 
             for job in adapter.search_jobs(config["search"]):
@@ -234,9 +243,7 @@ def apply(config_path: str, dry_run: bool, only_sites: tuple[str, ...]):
                 lo, hi = apply_config.get("delay_between_applications_seconds", [30, 90])
                 time.sleep(random.uniform(lo, hi))
 
-            page.close()
-
-        browser.close()
+            context.close()
 
     console.rule("[bold]Run summary")
     console.print(tracker.summary())

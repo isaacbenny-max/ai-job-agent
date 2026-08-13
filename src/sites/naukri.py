@@ -8,11 +8,8 @@ skipped, same policy as the other two adapters.
 """
 from __future__ import annotations
 
-import re
 from typing import Iterator
 from urllib.parse import quote
-
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from src.autofill import fill_application_form
 from src.models import ApplicationRecord, ApplicationStatus, CandidateProfile, JobPosting, Site
@@ -20,33 +17,26 @@ from src.sites.base import SiteAdapter
 
 BASE_URL = "https://www.naukri.com"
 LOGIN_URL = "https://www.naukri.com/nlogin/login"
+HOMEPAGE_URL = "https://www.naukri.com/mnjuser/homepage"
 
 
 class NaukriAdapter(SiteAdapter):
     site_name = "naukri"
 
     def login(self) -> bool:
+        self.page.goto(HOMEPAGE_URL, wait_until="domcontentloaded")
+        self.page.wait_for_timeout(1000)
+
+        if self._is_logged_in():
+            return True  # persistent browser profile already has an active session
+
         self.page.goto(LOGIN_URL, wait_until="domcontentloaded")
+        self._pause_for_manual_login("You should land on your Naukri homepage when done.")
+        self.page.wait_for_timeout(1500)
 
-        if self.page.locator("input#usernameField").count() == 0:
-            return True  # already authenticated via persistent profile
+        return self._is_logged_in()
 
-        self.page.fill("input#usernameField", self.credentials.get("email", ""))
-        self.page.fill("input#passwordField", self.credentials.get("password", ""))
-        self.page.click("button[type='submit']")
-
-        try:
-            self.page.wait_for_url(re.compile(r".*naukri\.com/mnjuser/homepage.*"), timeout=15000)
-        except PlaywrightTimeoutError:
-            pass
-
-        if self.page.locator("text=/captcha/i").count() > 0:
-            print(
-                "[naukri] CAPTCHA detected. Please complete it manually in the browser "
-                "window, then press Enter here..."
-            )
-            input()
-
+    def _is_logged_in(self) -> bool:
         return "homepage" in self.page.url
 
     def search_jobs(self, search_config: dict) -> Iterator[JobPosting]:

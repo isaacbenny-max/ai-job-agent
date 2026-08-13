@@ -7,11 +7,8 @@ forms are too varied to fill generically and safely.
 """
 from __future__ import annotations
 
-import re
 from typing import Iterator
 from urllib.parse import quote
-
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from src.autofill import fill_application_form
 from src.models import ApplicationRecord, ApplicationStatus, CandidateProfile, JobPosting, Site
@@ -25,32 +22,24 @@ class IndeedAdapter(SiteAdapter):
     site_name = "indeed"
 
     def login(self) -> bool:
+        self.page.goto(BASE_URL, wait_until="domcontentloaded")
+        self.page.wait_for_timeout(1000)
+
+        if self._is_logged_in():
+            return True  # persistent browser profile already has an active session
+
         self.page.goto(LOGIN_URL, wait_until="domcontentloaded")
-
-        if self.page.locator("input[type='email']").count() == 0:
-            return True  # already authenticated via persistent profile
-
-        self.page.fill("input[type='email']", self.credentials.get("email", ""))
-        self.page.click("button[type='submit']")
+        self._pause_for_manual_login("You should land back on indeed.com signed in when done.")
         self.page.wait_for_timeout(1500)
 
-        if self.page.locator("input[type='password']").count() > 0:
-            self.page.fill("input[type='password']", self.credentials.get("password", ""))
-            self.page.click("button[type='submit']")
+        return self._is_logged_in()
 
-        try:
-            self.page.wait_for_url(re.compile(r".*indeed\.com/(?!auth).*"), timeout=15000)
-        except PlaywrightTimeoutError:
-            pass
-
-        if self.page.locator("text=/verify|captcha/i").count() > 0:
-            print(
-                "[indeed] Verification / CAPTCHA detected. Please complete it manually "
-                "in the browser window, then press Enter here..."
-            )
-            input()
-
-        return "auth" not in self.page.url
+    def _is_logged_in(self) -> bool:
+        if "secure.indeed.com" in self.page.url or "/auth" in self.page.url:
+            return False
+        # Logged-out Indeed shows a "Sign in" link in the header; logged-in
+        # shows an account menu instead. Absence of "Sign in" is our signal.
+        return self.page.locator("text=/^Sign in$/i").count() == 0
 
     def search_jobs(self, search_config: dict) -> Iterator[JobPosting]:
         titles = search_config.get("titles", [])

@@ -15,16 +15,14 @@ section before using this in `apply.mode: auto`.
 """
 from __future__ import annotations
 
-import re
 from typing import Iterator
-
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from src.autofill import fill_application_form
 from src.models import ApplicationRecord, ApplicationStatus, CandidateProfile, JobPosting, Site
 from src.sites.base import SiteAdapter
 
 LOGIN_URL = "https://www.linkedin.com/login"
+FEED_URL = "https://www.linkedin.com/feed/"
 JOBS_SEARCH_URL = "https://www.linkedin.com/jobs/search/"
 
 
@@ -32,30 +30,20 @@ class LinkedInAdapter(SiteAdapter):
     site_name = "linkedin"
 
     def login(self) -> bool:
+        self.page.goto(FEED_URL, wait_until="domcontentloaded")
+        self.page.wait_for_timeout(1000)
+
+        if self._is_logged_in():
+            return True  # persistent browser profile already has an active session
+
         self.page.goto(LOGIN_URL, wait_until="domcontentloaded")
+        self._pause_for_manual_login("You should land on your LinkedIn feed when done.")
+        self.page.wait_for_timeout(1500)
 
-        # Already logged in via a persistent browser profile.
-        if "/feed" in self.page.url or self.page.locator("input#session_key").count() == 0:
-            if "login" not in self.page.url:
-                return True
+        return self._is_logged_in()
 
-        self.page.fill("input#session_key", self.credentials.get("email", ""))
-        self.page.fill("input#session_password", self.credentials.get("password", ""))
-        self.page.click("button[type='submit']")
-
-        try:
-            self.page.wait_for_url(re.compile(r".*linkedin\.com/(feed|checkpoint).*"), timeout=15000)
-        except PlaywrightTimeoutError:
-            pass
-
-        if "checkpoint" in self.page.url:
-            print(
-                "[linkedin] Security checkpoint / CAPTCHA / 2FA detected. "
-                "Please complete it manually in the browser window, then press Enter here..."
-            )
-            input()
-
-        return "feed" in self.page.url or self.page.locator("nav.global-nav").count() > 0
+    def _is_logged_in(self) -> bool:
+        return "linkedin.com/feed" in self.page.url or self.page.locator("nav.global-nav").count() > 0
 
     def search_jobs(self, search_config: dict) -> Iterator[JobPosting]:
         titles = search_config.get("titles", [])
