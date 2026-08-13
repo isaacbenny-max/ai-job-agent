@@ -1,0 +1,75 @@
+# ============================================================================
+# AI Job Agent — configuration
+#
+# This is the ONE file you edit for day-to-day use. Credentials and API keys
+# go in .env instead (see .env.example) — never put secrets in this file.
+# ============================================================================
+
+# --- Search criteria ---------------------------------------------------------
+search:
+  titles:
+    - "Software Engineer"
+    - "Backend Developer"
+    - "Python Developer"
+  locations:
+    - "Bengaluru, India"
+    - "Remote"
+  keywords_include: []          # optional extra keywords a posting must contain
+  keywords_exclude:              # postings containing these are skipped
+    - "unpaid"
+    - "commission only"
+  min_salary_lpa: 0              # 0 = no filter (lakhs per annum, India-style)
+  experience_years: 2            # your years of experience, used for filtering
+  remote_only: false
+  posted_within_days: 14         # ignore postings older than this
+
+# --- Sites to search / apply on ---------------------------------------------
+sites:
+  linkedin:
+    enabled: true
+    easy_apply_only: true        # only use LinkedIn's "Easy Apply" flow
+  indeed:
+    enabled: true
+  naukri:
+    enabled: true
+
+# --- Matching ------------------------------------------------------------
+matching:
+  # Jobs scoring below this (0-100, judged by the LLM against your resume)
+  # are skipped entirely — never even opened for application.
+  min_match_score: 70
+  model: "claude-sonnet-4-5"
+
+# --- Application behavior ----------------------------------------------------
+apply:
+  # "auto"   -> agent fills the form AND clicks final submit automatically
+  # "review" -> agent fills the form and pauses for you to click submit
+  mode: "auto"
+
+  dry_run: false                 # if true, do everything except the final submit/click
+  max_applications_per_run: 15
+  max_applications_per_day: 25
+  delay_between_applications_seconds: [45, 120]   # randomized human-like delay range
+
+  # Answers used to fill common yes/no or numeric screening questions when
+  # the LLM can't confidently infer them from your resume.
+  default_answers:
+    willing_to_relocate: true
+    require_visa_sponsorship: false
+    years_of_experience_fallback: 2
+    notice_period_days: 30
+
+# --- Files -----------------------------------------------------------------
+files:
+  resume_path: "./resumes/resume.pdf"
+
+# --- Logging / tracking -------------------------------------------------
+tracking:
+  db_path: "./data/applications.db"
+  screenshot_on_submit: true
+  screenshot_dir: "./data/screenshots"
+
+# --- Browser ------------------------------------------------------------
+browser:
+  headless: false        # keep false at first so you can watch it / solve CAPTCHAs
+  slow_mo_ms: 150         # small delay between actions, looks more human & is easier to debug

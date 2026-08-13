@@ -1,0 +1,19 @@
+Isaac Benny
+Software Engineer
+
+Email: isaacbennyv@gmail.com
+Phone: +91 98765 43210
+LinkedIn: https://www.linkedin.com/in/isaacbennyv
+
+Summary
+Backend engineer with experience building scalable APIs.
+
+Skills
+Python, Django, PostgreSQL, Docker, AWS
+
+Experience
+Backend Developer, Acme Corp (2022 - Present)
+Built and maintained REST APIs serving 1M+ requests/day.
+
+Education
+B.Tech in Computer Science, XYZ University (2018 - 2022)

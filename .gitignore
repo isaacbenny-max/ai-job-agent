@@ -1,0 +1,42 @@
+## Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+## Environment / secrets
+.env
+*.env.local
+credentials.json
+storage_state*.json
+cookies/
+
+## Runtime data
+data/*.db
+data/*.sqlite3
+logs/
+*.log
+screenshots/
+downloads/
+
+## Resume / personal files (don't accidentally commit your real resume)
+resumes/*
+!resumes/.gitkeep
+
+## OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+## Playwright
+node_modules/
+playwright-report/
+test-results/
