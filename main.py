@@ -91,9 +91,10 @@ def show_profile(resume: str | None):
 
     if not profile.email or not profile.skills:
         console.print(
-            "\n[yellow]Heads up: some key fields are empty. If ANTHROPIC_API_KEY isn't set "
+            "\n[yellow]Heads up: some key fields are empty. If GEMINI_API_KEY isn't set "
             "in .env, parsing falls back to regex-only extraction, which misses skills and "
-            "experience. Add your API key for a much more complete profile.[/yellow]"
+            "experience. Get a free key at https://aistudio.google.com/apikey and add it "
+            "for a much more complete profile.[/yellow]"
         )
 
 

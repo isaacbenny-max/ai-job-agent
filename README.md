@@ -35,7 +35,7 @@ flowchart LR
 2. **Site Adapters** (`src/sites/linkedin.py`, `indeed.py`, `naukri.py`) log into each site with
    Playwright and search for jobs matching the titles/locations in `config.yaml`.
 3. **Matcher** (`src/matcher.py`) first runs cheap keyword filters (exclude "unpaid", require
-   "remote", etc.), then asks Claude to score how good a fit each remaining job actually is
+   "remote", etc.), then asks Gemini (Google's free-tier LLM) to score how good a fit each remaining job actually is
    against your real resume — not just keyword overlap.
 4. **Autofill Engine** (`src/autofill.py`) is the one piece of form-filling logic shared by all
    three site adapters. It finds every field on the application form, answers the obvious ones
@@ -56,7 +56,8 @@ pip install -r requirements.txt
 playwright install chromium
 
 cp .env.example .env
-# edit .env: add your ANTHROPIC_API_KEY and your LinkedIn/Indeed/Naukri credentials
+# edit .env: add your free GEMINI_API_KEY (get one at https://aistudio.google.com/apikey)
+# and your LinkedIn/Indeed/Naukri credentials
 
 mkdir -p resumes && cp /path/to/your/resume.pdf resumes/resume.pdf
 
@@ -112,7 +113,7 @@ ai-job-agent/
 ├── src/
 │   ├── models.py             # shared data classes: CandidateProfile, JobPosting, etc.
 │   ├── resume_parser.py       # PDF/DOCX/TXT -> structured CandidateProfile
-│   ├── llm.py                 # all Claude API calls live here
+│   ├── llm.py                 # all Gemini API calls live here (free tier)
 │   ├── matcher.py              # keyword filters + LLM match scoring
 │   ├── autofill.py             # generic form-filling engine used by every adapter
 │   ├── tracker.py              # SQLite dedupe + audit log

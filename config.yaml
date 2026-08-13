@@ -38,7 +38,12 @@ matching:
   # Jobs scoring below this (0-100, judged by the LLM against your resume)
   # are skipped entirely — never even opened for application.
   min_match_score: 70
-  model: "claude-sonnet-4-5"
+  # Free-tier Gemini model (see .env.example for how to get a free API key).
+  # Other free-tier options as of this writing: gemini-2.5-flash-lite (cheaper/
+  # faster, slightly less capable) and gemini-2.5-pro (slower, most capable,
+  # lower free-tier rate limit). Check https://ai.google.dev/gemini-api/docs/pricing
+  # for what's currently free before changing this.
+  model: "gemini-2.5-flash"
 
 # --- Application behavior ----------------------------------------------------
 apply:

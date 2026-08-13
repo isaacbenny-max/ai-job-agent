@@ -41,18 +41,21 @@ def passes_keyword_filters(job: JobPosting, search_config: dict) -> tuple[bool, 
     return True, ""
 
 
-def score_match(profile: CandidateProfile, job: JobPosting, min_score: int) -> MatchResult:
+def score_match(
+    profile: CandidateProfile, job: JobPosting, min_score: int, model: str | None = None
+) -> MatchResult:
     """Run the LLM match scorer. Raises LLMNotConfigured if no API key is set —
     callers should catch that and either skip scoring or treat everything as
     passing, depending on how the agent is configured to run without an LLM.
     """
-    from src.llm import score_job_match
+    from src.llm import DEFAULT_MODEL, score_job_match
 
     result = score_job_match(
         profile_context=profile.to_prompt_context(),
         job_title=job.title,
         company=job.company,
         job_description=job.description,
+        model=model or DEFAULT_MODEL,
     )
     score = int(result.get("score", 0))
     return MatchResult(
@@ -71,9 +74,11 @@ def evaluate(
     if not keyword_ok:
         return MatchResult(passed=False, score=0, reasoning=reason, missing_requirements=[])
 
-    min_score = config.get("matching", {}).get("min_match_score", 70)
+    matching_config = config.get("matching", {})
+    min_score = matching_config.get("min_match_score", 70)
+    model = matching_config.get("model")
     try:
-        return score_match(profile, job, min_score)
+        return score_match(profile, job, min_score, model=model)
     except Exception as exc:  # LLM not configured, rate-limited, etc.
         return MatchResult(
             passed=False,

@@ -9,7 +9,7 @@ Strategy:
    experience) as JSON. This is far more robust than regex against the
    huge variety of resume layouts people use.
 
-The LLM step is optional — if no ANTHROPIC_API_KEY is configured, we fall
+The LLM step is optional — if no GEMINI_API_KEY is configured, we fall
 back to a purely regex/heuristic parse so the rest of the pipeline still
 works (with a less complete profile).
 """
