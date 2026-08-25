@@ -18,8 +18,8 @@ search:
   keywords_exclude:              # postings containing these are skipped
     - "unpaid"
     - "commission only"
-  min_salary_lpa: 0              # 0 = no filter (lakhs per annum, India-style)
-  experience_years: 2            # your years of experience, used for filtering
+  min_salary_lpa: 6              # 0 = no filter (lakhs per annum, India-style)
+  experience_years: 0            # your years of experience, used for filtering
   remote_only: false
   posted_within_days: 14         # ignore postings older than this
 
@@ -43,7 +43,7 @@ matching:
   # faster, slightly less capable) and gemini-2.5-pro (slower, most capable,
   # lower free-tier rate limit). Check https://ai.google.dev/gemini-api/docs/pricing
   # for what's currently free before changing this.
-  model: "gemini-2.5-flash"
+  model: "gemini-flash-latest"
 
 # --- Application behavior ----------------------------------------------------
 apply:
@@ -51,7 +51,7 @@ apply:
   # "review" -> agent fills the form and pauses for you to click submit
   mode: "auto"
 
-  dry_run: false                 # if true, do everything except the final submit/click
+  dry_run: true                 # if true, do everything except the final submit/click
   max_applications_per_run: 15
   max_applications_per_day: 25
   delay_between_applications_seconds: [45, 120]   # randomized human-like delay range

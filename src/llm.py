@@ -29,10 +29,10 @@ import requests
 # stable, free-tier-eligible default as of this writing. Swap this (or set
 # matching.model in config.yaml) if Google ships a newer default later;
 # see https://ai.google.dev/gemini-api/docs/pricing for what's currently free.
-DEFAULT_MODEL = "gemini-2.5-flash"
+DEFAULT_MODEL = "gemini-flash-latest"
 
 API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
-REQUEST_TIMEOUT_SECONDS = 60
+REQUEST_TIMEOUT_SECONDS = 120
 
 
 class LLMNotConfigured(RuntimeError):
